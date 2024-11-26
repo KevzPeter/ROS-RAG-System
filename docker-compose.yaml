@@ -1,0 +1,70 @@
+services:
+  apiserver:
+    image: allegroai/clearml:latest
+    ports:
+      - "8008:8008"
+    command: apiserver
+    environment:
+      CLEARML_CONFIG_DIR: "/opt/clearml/config"
+      CLEARML_MONGODB_SERVICE_HOST: "mongodb"
+      CLEARML_ELASTIC_SERVICE_HOST: "elasticsearch"
+
+  webserver:
+    image: allegroai/clearml:latest
+    ports:
+      - "8080:8080"
+    command: webserver
+    depends_on:
+      - apiserver
+
+  fileserver:
+    image: allegroai/clearml:latest
+    ports:
+      - "8081:8081"
+    command: fileserver
+    depends_on:
+      - apiserver
+
+  app:
+    build: .
+    ports:
+      - "7860:7860"
+    environment:
+      - CLEARML_WEB_HOST=http://webserver:8080
+      - CLEARML_API_HOST=http://apiserver:8008
+      - CLEARML_FILES_HOST=http://fileserver:8081
+      - CLEARML_CONFIG_DIR=/opt/clearml/config
+      - HUGGINGFACE_API_KEY=${HF_API_KEY}
+    volumes:
+      - ./clearml/config:/opt/clearml/config
+    depends_on:
+      - apiserver
+      - webserver
+      - fileserver
+      - mongodb
+      - qdrant
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  qdrant:
+    image: qdrant/qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+
+volumes:
+  mongo_data:
+  qdrant_data:
