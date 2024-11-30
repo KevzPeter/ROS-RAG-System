@@ -1,3 +1,5 @@
+from urllib.parse import urljoin, urlparse
+from bs4 import BeautifulSoup
 import gradio as gr
 from clearml import Task, PipelineDecorator
 import pymongo
@@ -7,45 +9,46 @@ import requests
 from datetime import datetime
 import uuid
 import json
+from utils import crawl_website
+import json
+
+client = pymongo.MongoClient("mongodb://localhost:27017/")
+db = client["ros2_rag"]
+collection = db["raw_docs"]
+
+# @PipelineDecorator.component(
+#     return_values=['documents'],
+#     cache=False
+# )
 
 
-@PipelineDecorator.component(
-    return_values=['documents'],
-    cache=True
-)
-def extract_ros2_docs():
-    repo_urls = [
-        "https://docs.ros.org/en/humble/",
-        "https://docs.nav2.org/",
-        "https://moveit.picknik.ai/main/index.html",
-        # "https://gazebosim.org/docs"
-    ]
+def extract_ros2_subdomain_docs():
+    f = open('subdomain_links.json')
+    repo_urls = json.load(f)['links']
 
     documents = []
-    # Document extraction logic here
-    for url in repo_urls:
-        response = requests.get(url)
-        if response.status_code == 200:
-            print(f'Successfully received response from {url}')
-            # print(f'{response.text}')
-            documents.append({
-                'content': response.text,
-                'source': url,
-                'timestamp': datetime.now()
-            })
-    # Store in MongoDB
-    client = pymongo.MongoClient("mongodb://localhost:27017/")
-    db = client["ros2_rag"]
-    collection = db["raw_docs"]
-    collection.insert_many(documents)
-
-    return documents
+    try:
+        # Crawl each website
+        for url in repo_urls:
+            print(f"\nCrawling {url}")
+            data_list = crawl_website(url, 50)
+            if data_list:
+                try:
+                    collection.insert_many(data_list)
+                    documents.extend(data_list)
+                    print(f"Stored {len(data_list)} pages from {url}")
+                except Exception as e:
+                    print(f"Error storing data from {url}: {str(e)}")
+    except Exception as e:
+        print(f"An error occurred while crawling: {str(e)}")
+    finally:
+        return documents
 
 
-@PipelineDecorator.component(
-    return_values=['vectors'],
-    cache=True
-)
+# @PipelineDecorator.component(
+#     return_values=['vectors'],
+#     cache=True
+# )
 def create_embeddings(documents):
     model = SentenceTransformer('all-MiniLM-L6-v2')
     vectors = []
@@ -60,7 +63,7 @@ def create_embeddings(documents):
     try:
         # Try to get collection to check if it exists
         qdrant.get_collection('ros2_docs')
-        print("COLLECTION ALREADY EXISTS!!!")
+        print("Collection ros2_docs exists")
     except:
         # Create collection with proper vector configuration
         qdrant.create_collection(
@@ -70,23 +73,19 @@ def create_embeddings(documents):
                 distance=models.Distance.COSINE
             )
         )
-        print("Created New Collection ros2_docs!")
+        print("Created new collection: ros2_docs!")
 
     # Process all documents
     for doc in documents:
         # embedding = model.encode(doc['content'])
-        embedding = model.encode(doc['description'])
+        embedding = model.encode(doc['text_content'])
         vectors.append(models.PointStruct(
             id=f"{str(uuid.uuid4())}",
             vector=embedding.tolist(),  # Use the default vector name
-            # 'vector': {},
-            # payload={
-            #     'content': doc['content'],
-            #     'source': str(doc.get('source', '')),
-            #     'timestamp': str(doc.get('timestamp', '')),
-            #     'mongodb_id': str(doc['_id'])
-            # }
-            payload=doc
+            payload={
+                "url": doc['url'],
+                "text_content": doc['text_content']
+            }
         ))
 
     # Upsert vectors in batches
@@ -98,93 +97,13 @@ def create_embeddings(documents):
     return vectors
 
 
-@PipelineDecorator.pipeline(
-    name='ROS2_RAG_Pipeline',
-    project='ROS2_RAG'
-)
+# @PipelineDecorator.pipeline(
+#     name='ROS2_RAG_Pipeline',
+#     project='ROS2_RAG',
+# )
 def pipeline_controller():
     # Execute pipeline steps
-    # documents = extract_ros2_docs()
-    documents = [
-        {
-            "name": "The Time Machine",
-            "description": "A man travels through time and witnesses the evolution of humanity.",
-            "author": "H.G. Wells",
-            "year": 1895,
-        },
-        {
-            "name": "Ender's Game",
-            "description": "A young boy is trained to become a military leader in a war against an alien race.",
-            "author": "Orson Scott Card",
-            "year": 1985,
-        },
-        {
-            "name": "Brave New World",
-            "description": "A dystopian society where people are genetically engineered and conditioned to conform to a strict social hierarchy.",
-            "author": "Aldous Huxley",
-            "year": 1932,
-        },
-        {
-            "name": "The Hitchhiker's Guide to the Galaxy",
-            "description": "A comedic science fiction series following the misadventures of an unwitting human and his alien friend.",
-            "author": "Douglas Adams",
-            "year": 1979,
-        },
-        {
-            "name": "Dune",
-            "description": "A desert planet is the site of political intrigue and power struggles.",
-            "author": "Frank Herbert",
-            "year": 1965,
-        },
-        {
-            "name": "Foundation",
-            "description": "A mathematician develops a science to predict the future of humanity and works to save civilization from collapse.",
-            "author": "Isaac Asimov",
-            "year": 1951,
-        },
-        {
-            "name": "Snow Crash",
-            "description": "A futuristic world where the internet has evolved into a virtual reality metaverse.",
-            "author": "Neal Stephenson",
-            "year": 1992,
-        },
-        {
-            "name": "Neuromancer",
-            "description": "A hacker is hired to pull off a near-impossible hack and gets pulled into a web of intrigue.",
-            "author": "William Gibson",
-            "year": 1984,
-        },
-        {
-            "name": "The War of the Worlds",
-            "description": "A Martian invasion of Earth throws humanity into chaos.",
-            "author": "H.G. Wells",
-            "year": 1898,
-        },
-        {
-            "name": "The Hunger Games",
-            "description": "A dystopian society where teenagers are forced to fight to the death in a televised spectacle.",
-            "author": "Suzanne Collins",
-            "year": 2008,
-        },
-        {
-            "name": "The Andromeda Strain",
-            "description": "A deadly virus from outer space threatens to wipe out humanity.",
-            "author": "Michael Crichton",
-            "year": 1969,
-        },
-        {
-            "name": "The Left Hand of Darkness",
-            "description": "A human ambassador is sent to a planet where the inhabitants are genderless and can change gender at will.",
-            "author": "Ursula K. Le Guin",
-            "year": 1969,
-        },
-        {
-            "name": "The Three-Body Problem",
-            "description": "Humans encounter an alien civilization that lives in a dying system.",
-            "author": "Liu Cixin",
-            "year": 2008,
-        },
-    ]
+    documents = extract_ros2_subdomain_docs()
     vectors = create_embeddings(documents)
     return vectors
 
@@ -202,7 +121,7 @@ class RAGSystem:
             limit=top_k
         )
         print(results)
-        return [hit.payload['description'] for hit in results]
+        return [hit.payload['text_content'] for hit in results]
 
     def generate_response(self, common_question, custom_question):
         # Prefer the custom question if provided
@@ -261,8 +180,8 @@ def create_gradio_interface():
 
 if __name__ == "__main__":
     # First run the pipeline
-    Task.init(project_name="ROS2_RAG", task_name="RAG_Pipeline")
-    PipelineDecorator.run_locally()
+    # Task.init(project_name="ROS2_RAG", task_name="RAG_Pipeline")
+    # PipelineDecorator.run_locally()
     pipeline_controller()
 
     # Then start the Gradio interface
