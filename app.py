@@ -31,12 +31,22 @@ def extract_ros2_subdomain_docs():
         # Crawl each website
         for url in repo_urls:
             print(f"\nCrawling {url}")
-            data_list = crawl_website(url, 50)
+            data_list = crawl_website(url, 100)
             if data_list:
                 try:
-                    collection.insert_many(data_list)
-                    documents.extend(data_list)
-                    print(f"Stored {len(data_list)} pages from {url}")
+                    unique_docs = []
+                    for doc in data_list:
+                        # Check if document with same URL exists
+                        existing_doc = collection.find_one({'url': doc['url']})
+                        if not existing_doc:
+                            unique_docs.append(doc)
+                    # Insert only unique documents
+                    if unique_docs:
+                        collection.insert_many(unique_docs)
+                        documents.extend(unique_docs)
+                        print(f"Stored {len(unique_docs)} unique pages from {url}")
+                    else:
+                        print(f"No new unique pages found from {url}")
                 except Exception as e:
                     print(f"Error storing data from {url}: {str(e)}")
     except Exception as e:
@@ -182,7 +192,7 @@ if __name__ == "__main__":
     # First run the pipeline
     # Task.init(project_name="ROS2_RAG", task_name="RAG_Pipeline")
     # PipelineDecorator.run_locally()
-    pipeline_controller()
+    # pipeline_controller()
 
     # Then start the Gradio interface
     demo = create_gradio_interface()
