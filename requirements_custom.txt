@@ -17,7 +17,6 @@ click==8.1.7
 colorama==0.4.6
 cryptography==43.0.3
 dataclasses-json==0.6.7
-defusedxml==0.7.1
 distro==1.9.0
 dnspython==2.7.0
 emoji==2.14.0
@@ -56,7 +55,7 @@ jsonpointer==3.0.0
 jsonschema==4.23.0
 jsonschema-specifications==2024.10.1
 langchain==0.3.7
-langchain-cli==0.0.32
+# langchain-cli==0.0.32
 langchain-community==0.3.7
 langchain-core==0.3.19
 langchain-mongodb==0.2.0
@@ -102,12 +101,13 @@ pyparsing==3.2.0
 pypdf==5.1.0
 python-dateutil==2.8.2
 python-dotenv==1.0.1
-python-iso639==2024.10.22
-python-magic-bin==0.4.14
+# python-iso639==2024.10.22
+# python-magic-bin==0.4.14
+git+https://github.com/julian-r/python-magic.git
 python-multipart==0.0.12
 python-oxmsg==0.0.1
 pytz==2024.2
-pywin32==308
+# pywin32==308
 PyYAML==6.0.2
 qdrant-client==1.12.1
 RapidFuzz==3.10.1
@@ -142,7 +142,7 @@ tomlkit==0.12.0
 torch==2.5.1
 tqdm==4.67.0
 transformers==4.46.3
-typer==0.9.4
+typer==0.12
 typing-inspect==0.9.0
 typing_extensions==4.12.2
 tzdata==2024.2
@@ -154,4 +154,3 @@ webencodings==0.5.1
 websockets==12.0
 wrapt==1.16.0
 yarl==1.17.2
-youtube-transcript-api==0.6.3

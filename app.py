@@ -11,8 +11,13 @@ import uuid
 import json
 from utils import crawl_website
 import json
+from dotenv import load_dotenv
+import os
 
-client = pymongo.MongoClient("mongodb://localhost:27017/")
+load_dotenv()
+
+mongo_uri = os.getenv('MONGO_URI')
+client = pymongo.MongoClient(mongo_uri)
 db = client["ros2_rag"]
 collection = db["raw_docs"]
 
@@ -69,7 +74,7 @@ def create_embeddings(documents):
     print(f"Vector Size ===> {vector_size}")
 
     # Create collection with proper vector configuration
-    qdrant = QdrantClient("localhost", port=6333)
+    qdrant = QdrantClient("localhost", port=os.getenv('QDRANT_PORT'))
     try:
         # Try to get collection to check if it exists
         qdrant.get_collection('ros2_docs')
@@ -120,7 +125,7 @@ def pipeline_controller():
 
 class RAGSystem:
     def __init__(self):
-        self.qdrant = QdrantClient("localhost", port=6333)
+        self.qdrant = QdrantClient("localhost", port=os.getenv('QDRANT_PORT'))
         self.model = SentenceTransformer('all-MiniLM-L6-v2')
 
     def retrieve_context(self, query, top_k=3):
