@@ -1,0 +1,7 @@
+__pycache__
+.gradio
+clearml
+qdrant_storage
+mongo_data
+sample_files
+venv
