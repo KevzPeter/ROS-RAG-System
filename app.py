@@ -13,7 +13,8 @@ from utils import crawl_website
 import json
 from dotenv import load_dotenv
 import os
-
+from youtube_scraper import run_youtube_scraper
+from github_scraper import run_github_scraper
 load_dotenv()
 
 mongo_uri = os.getenv('MONGO_URI')
@@ -21,12 +22,13 @@ client = pymongo.MongoClient(mongo_uri)
 db = client["ros2_rag"]
 collection = db["raw_docs"]
 
-# @PipelineDecorator.component(
-#     return_values=['documents'],
-#     cache=False
-# )
+qdrant_collection = "ros2_docs"
 
 
+@PipelineDecorator.component(
+    return_values=['documents'],
+    cache=False
+)
 def extract_ros2_subdomain_docs():
     f = open('subdomain_links.json')
     repo_urls = json.load(f)['links']
@@ -60,35 +62,32 @@ def extract_ros2_subdomain_docs():
         return documents
 
 
-# @PipelineDecorator.component(
-#     return_values=['vectors'],
-#     cache=True
-# )
+@PipelineDecorator.component(
+    return_values=['vectors'],
+    cache=True
+)
 def create_embeddings(documents):
     model = SentenceTransformer('all-MiniLM-L6-v2')
     vectors = []
 
-    # First document to get embedding size
-    # sample_embedding = model.encode(documents[0]['content'])
     vector_size = model.get_sentence_embedding_dimension()
-    print(f"Vector Size ===> {vector_size}")
+    print(f"Vector Size: {vector_size}")
 
-    # Create collection with proper vector configuration
+    # Creating collection with vector configuration
     qdrant = QdrantClient("localhost", port=os.getenv('QDRANT_PORT'))
     try:
-        # Try to get collection to check if it exists
-        qdrant.get_collection('ros2_docs')
-        print("Collection ros2_docs exists")
+        qdrant.get_collection(qdrant_collection)
+        print(f"Collection {qdrant_collection} exists")
     except:
-        # Create collection with proper vector configuration
+        # Create collection if it doesn't exist
         qdrant.create_collection(
-            collection_name='ros2_docs',
-            vectors_config=models.VectorParams(  # Named vector configuration
+            collection_name=qdrant_collection,
+            vectors_config=models.VectorParams(
                 size=vector_size,
                 distance=models.Distance.COSINE
             )
         )
-        print("Created new collection: ros2_docs!")
+        print(f"Created new collection: {qdrant_collection}!")
 
     # Process all documents
     for doc in documents:
@@ -105,17 +104,17 @@ def create_embeddings(documents):
 
     # Upsert vectors in batches
     qdrant.upload_points(
-        collection_name='ros2_docs',
+        collection_name=qdrant_collection,
         points=vectors
     )
 
     return vectors
 
 
-# @PipelineDecorator.pipeline(
-#     name='ROS2_RAG_Pipeline',
-#     project='ROS2_RAG',
-# )
+@PipelineDecorator.pipeline(
+    name='ROS2_RAG_Pipeline',
+    project='ROS2_RAG',
+)
 def pipeline_controller():
     # Execute pipeline steps
     documents = extract_ros2_subdomain_docs()
@@ -131,7 +130,7 @@ class RAGSystem:
     def retrieve_context(self, query, top_k=3):
         query_vector = self.model.encode(query)
         results = self.qdrant.search(
-            collection_name="ros2_docs",
+            collection_name=qdrant_collection,
             query_vector=query_vector.tolist(),
             limit=top_k
         )
@@ -175,29 +174,47 @@ class RAGSystem:
 def create_gradio_interface():
     rag = RAGSystem()
 
-    demo = gr.Interface(
-        fn=rag.generate_response,
-        inputs=[
-            gr.Dropdown(
-                choices=[
-                    "Tell me how can I navigate to a specific pose - include replanning aspects in your answer.",
-                    "Can you provide me with code for this task?"
-                ],
-                label="Common Questions"
-            ),
-            gr.Textbox(label="Or ask your own question")
-        ],
-        outputs=gr.Textbox(label="Answer"),
-        title="ROS2 Navigation Assistant"
-    )
+    def respond(message, history):
+        # Pass the message as both parameters since it's the same input
+        bot_message = rag.generate_response(message, message)
+        return bot_message
+
+    with gr.Blocks() as demo:
+        chatbot = gr.ChatInterface(
+            fn=respond,
+            examples=[
+                ["Tell me how can I navigate to a specific pose - include replanning aspects in your answer."],
+                ["Can you provide me with code for this task?"]
+            ],
+            title="ROS2 Navigation Assistant"
+        )
+
+        dropdown = gr.Dropdown(
+            choices=[
+                "Tell me how can I navigate to a specific pose - include replanning aspects in your answer.",
+                "Can you provide me with code for this task?"
+            ],
+            label="Common Questions",
+            interactive=True
+        )
+
+        def handle_dropdown(value):
+            return value
+
+        dropdown.select(
+            fn=handle_dropdown,
+            inputs=[dropdown],
+            outputs=[chatbot.textbox]
+        )
+
     return demo
 
 
 if __name__ == "__main__":
     # First run the pipeline
-    # Task.init(project_name="ROS2_RAG", task_name="RAG_Pipeline")
-    # PipelineDecorator.run_locally()
-    # pipeline_controller()
+    Task.init(project_name="ROS2_RAG", task_name="RAG_Pipeline")
+    PipelineDecorator.run_locally()
+    pipeline_controller()
 
     # Then start the Gradio interface
     demo = create_gradio_interface()
