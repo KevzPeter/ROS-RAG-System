@@ -1,4 +1,13 @@
 services:
+  app:
+    build: .
+    container_name: app
+    environment:
+      - EMBEDDING_MODEL = all-MiniLM-L6-v2
+      - MONGO_URI = mongodb://localhost:27017/
+      - GITHUB_TOKEN = token
+      - QDRANT_PORT = 6333
+      - YOUTUBE_API_KEY = key
   qdrant:
     image: qdrant/qdrant
     container_name: qdrantdb
