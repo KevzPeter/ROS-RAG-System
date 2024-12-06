@@ -5,3 +5,4 @@ key_param.py
 qdrant_data/
 qdrant_storage/
 clearml/
+mongo_data/
