@@ -9,12 +9,12 @@ import requests
 from datetime import datetime
 import uuid
 import json
-from utils import crawl_website
+from web_crawler import crawl_website
 import json
 from dotenv import load_dotenv
 import os
-from youtube_scraper import run_youtube_scraper
-from github_scraper import run_github_scraper
+from youtube_ingester import run_youtube_ingester
+from github_ingester import run_github_ingester
 load_dotenv()
 
 mongo_uri = os.getenv('MONGO_URI')

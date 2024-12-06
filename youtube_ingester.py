@@ -6,8 +6,11 @@ import os
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
 from urllib.parse import urlparse, parse_qs
+from clearml import Task
 
 load_dotenv()
+
+task = Task.init(project_name='ROS2_RAG', task_name='Ingesting Youtube videos')
 
 
 def get_video_ids_from_search(api_key, search_queries):
@@ -70,7 +73,7 @@ def get_transcript(video_id):
         return None
 
 
-def run_youtube_scraper():
+def run_youtube_ingester():
     # YouTube API key from environment variables
     api_key = os.getenv('YOUTUBE_API_KEY')
     client = MongoClient(os.getenv('MONGO_URI'))
@@ -108,4 +111,4 @@ def run_youtube_scraper():
 
 
 if __name__ == "__main__":
-    run_youtube_scraper()
+    run_youtube_ingester()
