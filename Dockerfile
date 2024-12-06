@@ -15,11 +15,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV CLEARML_HOST=http://localhost:8080
-ENV MONGODB_URL=mongodb://localhost:27017
-ENV QDRANT_URL=localhost:6333
-
 # Run the pipeline and start the application
 CMD ["python", "app.py"]
