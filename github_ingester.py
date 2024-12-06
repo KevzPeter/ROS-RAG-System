@@ -8,8 +8,7 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-# Initialize ClearML task
-task = Task.init(project_name='ROS2_RAG', task_name='Scraping Github')
+task = Task.init(project_name='ROS2_RAG', task_name='Ingesting Github repositories')
 
 # MongoDB configuration
 

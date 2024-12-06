@@ -6,8 +6,11 @@ import os
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
 from urllib.parse import urlparse, parse_qs
+from clearml import Task
 
 load_dotenv()
+
+task = Task.init(project_name='ROS2_RAG', task_name='Ingesting Youtube videos')
 
 
 def get_video_ids_from_search(api_key, search_queries):
