@@ -114,7 +114,7 @@ def store_in_mongodb(repo_info, contents):
             task.logger.report_text(f"Error storing {item['path']}: {str(e)}", level=logging.ERROR)
 
 
-def run_github_scraper():
+def run_github_ingester():
     # GitHub configuration
     GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
 
@@ -164,4 +164,4 @@ def run_github_scraper():
 
 
 if __name__ == "__main__":
-    run_github_scraper()
+    run_github_ingester()

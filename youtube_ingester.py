@@ -70,7 +70,7 @@ def get_transcript(video_id):
         return None
 
 
-def run_youtube_scraper():
+def run_youtube_ingester():
     # YouTube API key from environment variables
     api_key = os.getenv('YOUTUBE_API_KEY')
     client = MongoClient(os.getenv('MONGO_URI'))
@@ -108,4 +108,4 @@ def run_youtube_scraper():
 
 
 if __name__ == "__main__":
-    run_youtube_scraper()
+    run_youtube_ingester()
