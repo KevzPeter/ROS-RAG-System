@@ -16,7 +16,7 @@ collectionName = "collection_of_text_blobs"
 collection = client[dbName][collectionName]
 
 # Initialize the DirectoryLoader
-loader = DirectoryLoader( './sample_files', glob="./*.txt", show_progress=True)
+loader = DirectoryLoader('./data', glob="./*.txt", show_progress=True)
 data = loader.load()
 
 # # Define the OpenAI Embedding Model we want to use for the source data
@@ -25,4 +25,4 @@ embeddings = OpenAIEmbeddings(openai_api_key=os.getenv('OPENAI_API_KEY'))
 
 # # Initialize the VectorStore, and
 # # vectorise the text from the documents using the specified embedding model, and insert them into the specified MongoDB collection
-vectorStore = MongoDBAtlasVectorSearch.from_documents( data, embeddings, collection=collection )
+vectorStore = MongoDBAtlasVectorSearch.from_documents(data, embeddings, collection=collection)
