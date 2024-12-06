@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Initialize ClearML task
-task = Task.init(project_name='GitHub Scraping', task_name='Repository Content')
+task = Task.init(project_name='ROS2_RAG', task_name='Scraping Github')
 
 # MongoDB configuration
 
@@ -77,7 +77,7 @@ def get_file_content(download_url):
 
 
 def store_in_mongodb(repo_info, contents):
-    """Store repository contents in MongoDB, skipping files larger than 16MB"""
+    """Store repository contents in MongoDB"""
     MAX_DOCUMENT_SIZE = 16000000  # 16MB in bytes
 
     for item in contents:
@@ -114,16 +114,19 @@ def store_in_mongodb(repo_info, contents):
             task.logger.report_text(f"Error storing {item['path']}: {str(e)}", level=logging.ERROR)
 
 
-def main():
+def run_github_scraper():
     # GitHub configuration
     GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
 
     # List of repositories to scrape
     repositories = [
         {'owner': 'ros2', 'repo': 'ros2'},
+        {'owner': 'ros2', 'repo': 'ros2_documentation'},
         {'owner': 'ros-planning', 'repo': 'navigation2'},
         {'owner': 'ros-planning', 'repo': 'moveit2'},
-        {'owner': 'gazebosim', 'repo': 'gz-sim'}
+        {'owner': 'gazebosim', 'repo': 'gz-sim'},
+        {'owner': 'ros-navigation', 'repo': 'navigation2'},
+        {'owner': 'moveit', 'repo': 'moveit2'}
     ]
 
     # Get repository contents for each repo
@@ -161,6 +164,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
-
-# check
+    run_github_scraper()
