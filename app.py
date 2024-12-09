@@ -89,12 +89,12 @@ class RAGSystem:
 
         return "\n".join(trimmed_history)
 
-    def generate_response(self, common_question, custom_question):
+    def generate_response(self, common_question, custom_question, model_name="llama3.2"):
         query = custom_question if custom_question else common_question
         context = " ".join(self.retrieve_context(query))
 
         # System message for context setting
-        system_message = "You are an expert in ROS2 robotics. Provide concise and accurate answers to user queries."
+        system_message = "You are an expert in ROS2 robotics. You are also an expert in subdomains such as ros2 robotics middleware, nav2 navigation, movit2 motion planning and gazebo simulation. Provide concise and accurate answers to user queries."
 
         # Trim conversation history
         history_text = self.trim_history(system_message, context, query)
@@ -103,11 +103,11 @@ class RAGSystem:
         prompt = (
             f"{system_message}\n\n"
             f"Conversation History:\n{history_text}\n\n"
-            f"Current Context: {context}\n"
-            f"User: {query}\nAssistant:"
+            f"Current Context: {context}\n\n"
+            f"User: {query}\n\nAssistant:"
         )
 
-        payload = {"model": "llama3.2", "prompt": prompt}
+        payload = {"model": model_name, "prompt": prompt}
         headers = {"Content-Type": "application/json"}
         response = requests.post(
             'http://localhost:11434/api/generate',
@@ -115,7 +115,7 @@ class RAGSystem:
             headers=headers,
             stream=True
         )
-        print(f"RESPONSE RECEIVED !!! ===> \n {response.text}")
+        print(f"Response received ===> \n {response.text}")
         response.raise_for_status()  # Ensure request was successful
 
         # Process streamed JSON responses
@@ -136,81 +136,122 @@ class RAGSystem:
         return full_response
 
 
-# @PipelineDecorator.component(return_values=['demo'], cache=False)
-# def create_gradio_interface():
-#     rag = RAGSystem()
-
-#     demo = gr.Interface(
-#         fn=rag.generate_response,
-#         inputs=[
-#             gr.Dropdown(
-#                 choices=[
-#                     "Tell me how can I navigate to a specific pose - include replanning aspects in your answer.",
-#                     "Can you provide me with code for this task?"
-#                 ],
-#                 label="Common Questions"
-#             ),
-#             gr.Textbox(label="Or ask your own question")
-#         ],
-#         outputs=gr.Textbox(label="Answer"),
-#         title="ROS2 Navigation Assistant"
-#     )
-#     return demo
-
+@PipelineDecorator.component(return_values=['demo'], cache=False)
 def create_gradio_interface():
     rag = RAGSystem()
 
-    def respond(message, history):
-        response_generator = rag.generate_response(message, message)
+    def respond(message, history, model_name):
+        response_generator = rag.generate_response(message, message, model_name)
         response = ""
         for chunk in response_generator:
             response = chunk
             yield response
 
-    with gr.Blocks() as demo:
-        chatbot = gr.ChatInterface(
-            fn=respond,
-            examples=[
-                ["Tell me how can I navigate to a specific pose - include replanning aspects in your answer."],
-                ["Can you provide me with code for this task?"]
-            ],
-            title="ROS2 Navigation Assistant",
-            description="Ask questions about ROS2 navigation and get detailed answers with code examples when applicable.",
-            chatbot=gr.Chatbot(height=500, type="messages"),
-            textbox=gr.Textbox(
-                placeholder="Ask a question about ROS2 navigation...",
-                container=False
-            ),
-            type="messages"
-        )
+    def get_ollama_models():
+        try:
+            response = requests.get('http://localhost:11434/api/tags')
+            data = response.json()
+            return [model['name'] for model in data['models']]
+        except:
+            return ["llama2:latest"]  # fallback option
 
-        dropdown = gr.Dropdown(
-            choices=[
-                "Tell me how can I navigate to a specific pose - include replanning aspects in your answer.",
-                "Can you provide me with code for this task?"
-            ],
-            label="Common Questions",
-            interactive=True
-        )
+    with gr.Blocks(title="ROS2 AI Assistant", theme=gr.themes.Soft()) as demo:
+        with gr.Column():
+            gr.Markdown(
+                """
+                # 🤖 ROS2 Navigation AI Assistant
+                ## 💡 Ask questions about ROS2 navigation and get detailed answers with code examples when applicable.
+                """
+            )
 
-        def handle_dropdown(value):
-            return value
+            with gr.Row():
+                model_dropdown = gr.Dropdown(
+                    choices=get_ollama_models(),
+                    value="llama2:latest",
+                    label="Select Model",
+                    interactive=True
+                )
 
-        dropdown.select(
-            fn=handle_dropdown,
-            inputs=[dropdown],
-            outputs=[chatbot.textbox]
-        )
+                question_dropdown = gr.Dropdown(
+                    choices=[
+                        "Tell me how can I navigate to a specific pose - include replanning aspects in your answer.",
+                        "Can you provide me with code for this task?"
+                    ],
+                    label="Common Questions",
+                    interactive=True
+                )
+
+            chatbot = gr.Chatbot(
+                height=500,
+                type="messages",
+                show_copy_button=True
+            )
+
+            with gr.Row():
+                msg = gr.Textbox(
+                    placeholder="Ask a question about ROS2 navigation...",
+                    scale=8
+                )
+                submit = gr.Button("Send", scale=1)
+
+            def user_input(user_message, history, model):
+                if history is None:
+                    history = []
+                history.append({"role": "user", "content": user_message})
+                return "", history, model
+
+            def bot_response(history, model):
+                if not history:
+                    return history
+
+                user_message = history[-1]["content"]
+                response_generator = rag.generate_response(user_message, user_message, model)
+
+                # Initialize assistant message
+                history.append({"role": "assistant", "content": ""})
+
+                for chunk in response_generator:
+                    history[-1]["content"] = chunk
+                    yield history
+
+            def handle_question_dropdown(value):
+                return value
+
+            msg.submit(
+                user_input,
+                [msg, chatbot, model_dropdown],
+                [msg, chatbot, model_dropdown]
+            ).then(
+                bot_response,
+                [chatbot, model_dropdown],
+                [chatbot]
+            )
+
+            submit.click(
+                user_input,
+                [msg, chatbot, model_dropdown],
+                [msg, chatbot, model_dropdown]
+            ).then(
+                bot_response,
+                [chatbot, model_dropdown],
+                [chatbot]
+            )
+
+            question_dropdown.select(
+                handle_question_dropdown,
+                inputs=[question_dropdown],
+                outputs=[msg]
+            )
 
     return demo
 
 
 if __name__ == "__main__":
-    # First run the pipeline
-    # Task.init(project_name="ROS2_RAG", task_name="RAG_Pipeline")
-    # PipelineDecorator.run_locally()
-    # pipeline_controller()
+    # Executing ETL pipelines with ClearML
+    Task.init(project_name="ROS2_RAG", task_name="RAG_Pipeline")
+    PipelineDecorator.run_locally()
+    pipeline_controller()
 
-    # Then start the Gradio interface
+    # Running Gradio interface
     demo = create_gradio_interface()
     demo.launch(server_name="0.0.0.0", server_port=7860)
