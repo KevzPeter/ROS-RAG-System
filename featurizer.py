@@ -176,7 +176,7 @@ class DataFeaturizer:
         return len(all_vectors)
 
 
-# @PipelineDecorator.component(return_values=['total_vectors'])
+@PipelineDecorator.component(return_values=['total_vectors'])
 def run_featurizer():
     featurizer = DataFeaturizer()
     total_vectors = featurizer.process_all_data()
