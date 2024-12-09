@@ -1,5 +1,5 @@
 import requests
-from clearml import Task
+from clearml import Task, PipelineDecorator
 import logging
 from pymongo import MongoClient
 from bson.binary import Binary
@@ -7,8 +7,6 @@ import pickle
 import os
 from dotenv import load_dotenv
 load_dotenv()
-
-task = Task.init(project_name='ROS2_RAG', task_name='Ingesting Github repositories')
 
 # MongoDB configuration
 
@@ -113,6 +111,7 @@ def store_in_mongodb(repo_info, contents):
             task.logger.report_text(f"Error storing {item['path']}: {str(e)}", level=logging.ERROR)
 
 
+@PipelineDecorator.component(return_values=['repositories'])
 def run_github_ingester():
     # GitHub configuration
     GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
@@ -160,7 +159,9 @@ def run_github_ingester():
                         value=len(item['content']),
                         iteration=0
                     )
+    return repositories
 
 
 if __name__ == "__main__":
+    task = Task.init(project_name='ROS2_RAG', task_name='Ingesting Github repositories')
     run_github_ingester()

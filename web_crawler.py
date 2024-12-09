@@ -1,6 +1,9 @@
+import json
 from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
 import requests
+import json
+from clearml import Task, PipelineDecorator
 
 
 def is_valid_url(url, base_domain):
@@ -81,3 +84,17 @@ def crawl_website(start_url, max_pages=10):
             print(f"Scraped {current_url}")
 
     return collected_data
+
+
+@PipelineDecorator.component(return_values=['data_list'])
+def crawl_subdomains():
+    f = open('subdomain_links.json')
+    repo_urls = json.load(f)['links']
+    for repo_url in repo_urls:
+        data_list = crawl_website(repo_url, 100)
+    return data_list
+
+
+if __name__ == "__main__":
+    task = Task.init(project_name='ROS2_RAG', task_name='ROS2 Web Crawling')
+    crawl_subdomains()

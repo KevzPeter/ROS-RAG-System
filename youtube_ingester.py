@@ -6,11 +6,9 @@ import os
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
 from urllib.parse import urlparse, parse_qs
-from clearml import Task
+from clearml import Task, PipelineDecorator
 
 load_dotenv()
-
-task = Task.init(project_name='ROS2_RAG', task_name='Ingesting Youtube videos')
 
 
 def get_video_ids_from_search(api_key, search_queries):
@@ -73,6 +71,7 @@ def get_transcript(video_id):
         return None
 
 
+@PipelineDecorator.component(return_values=['video_ids'])
 def run_youtube_ingester():
     # YouTube API key from environment variables
     api_key = os.getenv('YOUTUBE_API_KEY')
@@ -108,7 +107,9 @@ def run_youtube_ingester():
 
     print(f"Successfully scraped {successful_scrapes} out of {len(video_ids)} videos")
     client.close()
+    return video_ids
 
 
 if __name__ == "__main__":
+    task = Task.init(project_name='ROS2_RAG', task_name='Ingesting Youtube videos')
     run_youtube_ingester()
