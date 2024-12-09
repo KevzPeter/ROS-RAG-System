@@ -47,11 +47,11 @@ We have used `clearml` orchestrator to ingest the following sources:
 
 ClearML Project:
 
-<img src="media/etl/clearml_1.png" height="250px">
+<img src="./media/etl/clearml_1.png" height="250px">
 
 Tasks Execution:
 
-<img src="media/etl/clearml_2.png" height="300px">
+<img src="./media/etl/clearml_2.png" height="300px">
 
 
 The ingested data is saved in `MongoDB` database, under 3 collections - `raw_docs`, `github_repo` & `youtube_transcripts`
@@ -76,7 +76,7 @@ Github Data in DB:
 
 ClearML pipeline execution logs
 
-<img src="media/etl/clearml_4.png" height="300px">
+<img src="./media/etl/clearml_4.png" height="300px">
 
 Target Repositories
 - ROS2 core repositories
@@ -127,7 +127,7 @@ Content Extraction
 
 ClearML pipeline execution logs
 
-<img src="media/etl/clearml_5.png" height="300px">
+<img src="./media/etl/clearml_5.png" height="300px">
 
 ### Featurization Pipelines Milestone
 
@@ -135,7 +135,7 @@ Here's the code python script for featurization pipeline: [featurizer.py](./feat
 
 ClearML pipeline execution logs for featurization:
 
-<img src="media/etl/clearml_3.png" height="300px">
+<img src="./media/etl/clearml_3.png" height="300px">
 
 The featurization pipeline processes data from multiple sources (GitHub repositories, web documentation, and YouTube transcripts) and transforms them into vector embeddings for use in our RAG system. The pipeline follows three main steps as shown in the diagram: Clean, Chunk, and Embed.
 
