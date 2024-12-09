@@ -180,6 +180,115 @@ Data visualization
 ### Finetuning Milestone
 
 
+The fine-tuning pipeline transforms a base LLaMA 3.2 model into a robotics-specialized model through two main components: Dataset Creation and Model Fine-tuning. The pipeline follows a structured approach to generate high-quality training data and efficiently fine-tune the model.
+
+### Pipeline Components
+
+**1. Instruction Dataset Creation**
+- Generates domain-specific Q&A pairs across robotics domains
+- Implements robust error handling and validation
+- Components:
+  - JSON validation and cleaning
+  - Rate-limited API interactions
+  - Progress tracking and logging
+  - Batch processing with retries
+
+**2. Model Fine-tuning**
+- Uses LoRA for efficient parameter updates
+- Implements 4-bit quantization for memory optimization
+- Includes comprehensive training monitoring
+- Components:
+  - Dataset preprocessing
+  - Model configuration
+  - Training management
+  - Model merging and deployment
+
+### Data Generation Process
+
+**Domain Coverage**
+
+### Domain Descriptions and Example Subtopics
+
+#### ROS2
+- **Description**: Middleware and core concepts
+- **Example Subtopics**: nodes, topics, services
+
+#### Nav2
+- **Description**: Navigation and path planning
+- **Example Subtopics**: costmaps, planners, controllers
+
+#### MoveIt2
+- **Description**: Motion planning and manipulation
+- **Example Subtopics**: kinematics, collision, trajectories
+
+#### Gazebo
+- **Description**: Robot simulation and testing
+- **Example Subtopics**: worlds, models, plugins
+
+
+**Topic Categories**
+- Installation procedures
+- Configuration guides
+- Implementation details
+- Troubleshooting steps
+- Optimization techniques
+- Integration methods
+- Best practices
+- Error handling
+
+### Training Pipeline
+
+**Data Preprocessing**
+- Cleans and validates JSON format
+- Implements consistent instruction-response formatting
+- Handles token length constraints
+- Manages special characters and formatting
+
+**Fine-tuning Configuration**
+- Uses 4-bit quantization (BitsAndBytes)
+- Implements LoRA with r=64 rank
+- Applies gradient checkpointing
+- Configures optimal batch sizes and learning rates
+
+**Training Management**
+- Tracks progress through Weights & Biases
+- Implements checkpoint saving
+- Monitors training metrics
+- Handles model merging and deployment
+
+### Monitoring and Metrics
+
+**Dataset Creation Metrics**
+- Generation success rate
+- Domain coverage statistics
+- Error rates and types
+- Processing speed
+
+**Training Metrics**
+- Loss curves
+- Learning rate progression
+- Memory usage
+- Training speed
+- Model performance indicators
+
+### Output Formats
+
+**Dataset Format**
+```json
+{
+    "instruction": "Technical robotics question",
+    "response": "Detailed technical answer"
+}
+```
+
+**Model Artifacts**
+- LoRA weights
+- Merged model
+- Tokenizer configuration
+- Model configuration
+
+The pipeline ensures systematic creation of high-quality training data and efficient model fine-tuning, resulting in a robotics-specialized language model capable of handling technical queries across multiple robotics domains.
+
 ### Deploying the App Milestone
 
 The UI was built using Gradio and the finetuned LLM was downloaded from HuggingFace and run using Ollama.
