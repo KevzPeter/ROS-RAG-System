@@ -304,6 +304,10 @@ The pipeline ensures systematic creation of high-quality training data and effic
 
 The UI was built using Gradio and the finetuned LLM was downloaded from HuggingFace and run using Ollama.
 
+Ollama LLM models (using `ollama list`):
+
+<img src="media/deployment/ollama.png">
+
 - The UI consists a dropdown with the two common questions given on the assignment page, which, upon being selected, loads the user's query box.
 - The user is also free to ask questions of his choice.
 - There is a chat window which displays the chat history.
