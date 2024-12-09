@@ -99,7 +99,67 @@ Content Extraction
 
 ### Featurization Pipelines Milestone
 
+Here's the code python script for featurization pipeline: [featurizer.py](./featurizer.py)
+
+The featurization pipeline processes data from multiple sources (GitHub repositories, web documentation, and YouTube transcripts) and transforms them into vector embeddings for use in our RAG system. The pipeline follows three main steps as shown in the diagram: Clean, Chunk, and Embed.
+
+#### Pipeline Components
+
+##### 1. Data Cleaning
+- Removes URLs and special characters
+- Normalizes whitespace
+- Handles text validation and empty content
+- Preserves essential punctuation (periods, hyphens)
+
+##### 2. Text Chunking
+- Splits text into semantic chunks using sentence tokenization
+- Maintains context with a maximum chunk size of 512 tokens
+- Preserves sentence boundaries for better coherence
+- Handles overflow with intelligent chunk management
+
+##### 3. Vector Embedding
+- Uses the `all-MiniLM-L6-v2` model for creating embeddings
+- Processes chunks in batches for efficiency
+- Adds rich metadata to each vector:
+  - Source type (github/web/youtube)
+  - Original URL
+  - Content type
+  - Full text chunk
+
+##### 4. Storage
+- Initializes and manages Qdrant vector database
+- Implements batch processing (100 vectors per batch)
+- Uses COSINE similarity for vector comparisons
+- Generates unique IDs for each vector entry
+
+#### Data Sources Integration
+The pipeline processes three main data sources:
+- **GitHub Repositories**: Code documentation and README files
+- **Web Documentation**: ROS2 official documentation and tutorials
+- **YouTube Transcripts**: Tutorial video transcripts
+
+#### Monitoring
+- Progress tracking through **ClearML**
+- Batch upload monitoring
+- Processing status for each data source
+- Vector creation metrics
+
+The pipeline ensures all processed data is properly cleaned, chunked, and embedded before being stored in the vector database for efficient retrieval during the RAG process.
+
+Vector data in QdrantDB:
+
+<img src="./media/featurization/qdrant.png" height="400px">
+
+Sample Point
+
+<img src="./media/featurization/qdrant_2.png" height="400px">
+
+Data visualization
+
+<img src="./media/featurization/qdrant_3.png" height="400px">
+
 ### Finetuning Milestone
+
 
 ### Deploying the App Milestone
 
