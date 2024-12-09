@@ -45,11 +45,20 @@ We have used `clearml` orchestrator to ingest the following sources:
   - https://github.com/moveit/moveit2
 - Youtube transcripts (tutorials, guides, integration videos)
 
+ClearML Project:
+
+<img src="media/etl/clearml_1.png" height="250px">
+
+Tasks Execution:
+
+<img src="media/etl/clearml_2.png" height="300px">
+
+
 The ingested data is saved in `MongoDB` database, under 3 collections - `raw_docs`, `github_repo` & `youtube_transcripts`
 
 Collections stored in MongoDB:
 
-<img src="./media/etl/mongo_1.png" height="300px">
+<img src="./media/etl/mongo_1.png" height="400px">
 
 [Github Ingester](./github_ingester.py)
 
@@ -63,7 +72,11 @@ Features
 
 Github Data in DB:
 
-<img src="./media/etl/github_data.png" height="300px">
+<img src="./media/etl/github_data.png" height="400px">
+
+ClearML pipeline execution logs
+
+<img src="media/etl/clearml_4.png" height="300px">
 
 Target Repositories
 - ROS2 core repositories
@@ -71,9 +84,6 @@ Target Repositories
 - MoveIt2 resources
 - Gazebo simulation documentation
 
-ClearML
-
-<img src="./media/etl/clearml1.png" height="300px">
 
 [Youtube Ingester](./youtube_ingester.py)
 
@@ -95,10 +105,9 @@ Search Categories
 
 Youtube Transcripts data:
 
-<img src="./media/etl/mongo_2.png" height="300px">
+<img src="./media/etl/mongo_2.png" height="400px">
 
 [Web Crawler](./web_crawler.py)
-
 
 A Python web crawler designed to extract documentation and code examples from ROS2-related websites. The crawler systematically visits web pages, extracts text content and code snippets, while respecting domain boundaries and page limits.
 
@@ -116,9 +125,17 @@ Content Extraction
 - Internal links for navigation
 - Stripped of scripts and styling
 
+ClearML pipeline execution logs
+
+<img src="media/etl/clearml_5.png" height="300px">
+
 ### Featurization Pipelines Milestone
 
 Here's the code python script for featurization pipeline: [featurizer.py](./featurizer.py)
+
+ClearML pipeline execution logs for featurization:
+
+<img src="media/etl/clearml_3.png" height="300px">
 
 The featurization pipeline processes data from multiple sources (GitHub repositories, web documentation, and YouTube transcripts) and transforms them into vector embeddings for use in our RAG system. The pipeline follows three main steps as shown in the diagram: Clean, Chunk, and Embed.
 
