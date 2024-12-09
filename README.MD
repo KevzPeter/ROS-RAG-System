@@ -278,7 +278,7 @@ The fine-tuning pipeline transforms a base LLaMA 3.2 model into a robotics-speci
 - Model performance indicators
 
 
-![alt text](image.png)
+![alt text](media/finetuning/finetuning_metrics.png)
 
 [https://api.wandb.ai/links/solomonmartin-new-york-university/41dmt4n0]
 
