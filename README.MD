@@ -185,6 +185,9 @@ The fine-tuning pipeline transforms a base LLaMA 3.2 model into a robotics-speci
 ### Pipeline Components
 
 **1. Instruction Dataset Creation**
+
+[Click here for instruction dataset creation script](./finetuning/finetune_ds.py)
+
 - Generates domain-specific Q&A pairs across robotics domains
 - Implements robust error handling and validation
 - Components:
@@ -194,6 +197,9 @@ The fine-tuning pipeline transforms a base LLaMA 3.2 model into a robotics-speci
   - Batch processing with retries
 
 **2. Model Fine-tuning**
+
+[Click here for LLM Finetuning Notebook](./finetuning/Finetune.ipynb)
+
 - Uses LoRA for efficient parameter updates
 - Implements 4-bit quantization for memory optimization
 - Includes comprehensive training monitoring
@@ -270,6 +276,8 @@ The fine-tuning pipeline transforms a base LLaMA 3.2 model into a robotics-speci
 - Memory usage
 - Training speed
 - Model performance indicators
+
+<img src="media/finetuning/finetuning_metrics.png" height="400px">
 
 ### Output Formats
 
