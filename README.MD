@@ -17,13 +17,13 @@
   - Github: github.com/SolomonMartin
   - HuggingFace: https://huggingface.co/SolomonMartin
 
-HuggingFace Finetuned Model: [Click here](hf.co/SolomonMartin/llama-3.1-robotics-finetuned-gguf) 
+🤗 HuggingFace Finetuned Model: [Click here](hf.co/SolomonMartin/llama-3.1-robotics-finetuned-gguf) 
 
-## Project Milestones
+## 🚀 Project Milestones
 
 ### Environment and Tooling Milestone
 
-The docker compose file is available [here](./docker-compose.yaml)
+The `docker compose file` is available [here](./docker-compose.yaml)
 
 Here's a screenshot of the output of `docker ps` command
 
@@ -33,9 +33,17 @@ Here's a screenshot of the output of `docker ps` command
 ### ETL Milestone
 
 We have used `clearml` orchestrator to ingest the following sources:
-- Websites (ROS2, Moveit etc)
-- Github (ROS2, MoveIT, Gazebo etc)
-- Youtube (tutorials)
+- Websites
+  - Refer this json file [here](./subdomain_links.json) for the websites (sub domains) from which we crawled
+- Github
+  - https://github.com/ros2/ros2
+  - https://github.com/ros2/ros2_documentation
+  - https://github.com/ros-planning/navigation2
+  - https://github.com/ros-planning/moveit2
+  - https://github.com/gazebosim/gz-sim
+  - https://github.com/ros-navigation/navigation2
+  - https://github.com/moveit/moveit2
+- Youtube transcripts (tutorials, guides, integration videos)
 
 The ingested data is saved in `MongoDB` database, under 3 collections - `raw_docs`, `github_repo` & `youtube_transcripts`
 
@@ -62,6 +70,10 @@ Target Repositories
 - Navigation2 documentation
 - MoveIt2 resources
 - Gazebo simulation documentation
+
+ClearML
+
+<img src="./media/etl/clearml1.png" height="300px">
 
 [Youtube Ingester](./youtube_ingester.py)
 
