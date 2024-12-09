@@ -17,7 +17,7 @@
   - Github: github.com/SolomonMartin
   - HuggingFace: https://huggingface.co/SolomonMartin
 
-🤗 HuggingFace Finetuned Model: [Click here](hf.co/SolomonMartin/llama-3.1-robotics-finetuned-gguf) 
+🤗 HuggingFace Finetuned Model: [Click here](https://huggingface.co/SolomonMartin/llama-3.1-robotics-finetuned-gguf) 
 
 ## 🚀 Project Milestones
 
