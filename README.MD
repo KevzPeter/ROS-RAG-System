@@ -12,6 +12,13 @@
   - Github: github.com/KevzPeter
   - HuggingFace: https://huggingface.co/kevin-peter
 
+- Solomon Martin
+  - Email: sj4531@nyu.edu
+  - Github: github.com/SolomonMartin
+  - HuggingFace: https://huggingface.co/SolomonMartin
+
+HuggingFace Finetuned Model: [Click here](hf.co/SolomonMartin/llama-3.1-robotics-finetuned-gguf) 
+
 ## Project Milestones
 
 ### Environment and Tooling Milestone
@@ -163,3 +170,90 @@ Data visualization
 
 ### Deploying the App Milestone
 
+The UI was built using Gradio and the finetuned LLM was downloaded from HuggingFace and run using Ollama.
+
+- The UI consists a dropdown with the two common questions given on the assignment page, which, upon being selected, loads the user's query box.
+- The user is also free to ask questions of his choice.
+- There is a chat window which displays the chat history.
+
+Question: Tell me how can I navigate to a specific pose - include replanning aspects in your answer.
+
+Answer:
+
+<img src="media/deployment/navigate.png" height="400px">
+
+
+Question: Can you provide me with code for this task?
+
+Answer:
+
+<img src="media/deployment/code.png" height="400px">
+
+Response received:
+```python
+import rclpy
+from rclpy.qos import QoSProfile
+from rclpy.node import Node
+from geometry_msgs.msg import PoseStamped
+from handeye_calibration_msgs.srv import Calibrate
+
+class NavigationNode(Node):
+    def __init__(self):
+        super().__init__('navigation_node')
+        self.calibrator = self.create_client(handeye_calibration_msgs.Srv, 'calibrate')
+        self.pose_pub = self.create_publisher(PoseStamped, '/pose', QoSProfile(depth=10))
+
+    def navigate_to_pose(self, pose_stamped):
+        # Set the target pose
+        self.target_pose = PoseStamped()
+        self.target_pose.header.frame_id = 'base_link'
+        self.target_pose.child_frame_id = 'end_effector'
+        self.target_pose.pose.position.x = pose_stamped.pose.position.x
+        self.target_pose.pose.position.y = pose_stamped.pose.position.y
+        self.target_pose.pose.position.z = pose_stamped.pose.position.z
+        self.target_pose.pose.orientation.w = 1
+
+        # Create a new request for the calibration service
+        request = handeye_calibration_msgs.Srv.CalibrateRequest()
+        request.pose_samples = []
+        request.pose_samples.append(pose_stamped)
+
+        # Call the calibration service to get the target pose in the camera frame
+        self.get_client().calibrate(request)
+
+        # Get the target pose in the camera frame
+        response = self.calibrator.call(request)
+        camera_pose = response.camera_transform
+
+        # Convert the camera pose to a PoseStamped message
+        camera_pose_msg = PoseStamped()
+        camera_pose_msg.header.frame_id = 'camera'
+        camera_pose_msg.child_frame_id = 'end_effector'
+        camera_pose_msg.pose.position.x = camera_pose.transform.translation.x
+        camera_pose_msg.pose.position.y = camera_pose.transform.translation.y
+        camera_pose_msg.pose.position.z = camera_pose.transform.translation.z
+        camera_pose_msg.pose.orientation.w = camera_pose.transform.rotation.w
+
+        # Publish the target pose
+        self.pose_pub.publish(camera_pose_msg)
+
+    def replan(self):
+        # Replan to the target pose using the motion planning group
+        self.get_client().motion_planning_group(replan=True, target_pose=self.target_pose)
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = NavigationNode()
+    try:
+        while True:
+            pose_stamped = PoseStamped()
+            # Get a new pose from the user or use a predefined pose
+            # ...
+            node.navigate_to_pose(pose_stamped)
+            node.replan()
+    except KeyboardInterrupt:
+        pass
+
+if __name__ == '__main__':
+    main()
+```
